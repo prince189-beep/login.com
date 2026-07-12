@@ -1,0 +1,10 @@
+# Install Node.js if needed (Kali has it)
+sudo apt update && sudo apt install -y nodejs
+
+# Create project directory
+mkdir ~/binance-phish-lab && cd ~/binance-phish-lab
+
+# Save index.html and server.js here
+
+# Start the server (run as root for port 80)
+sudo node server.js
